@@ -1,7 +1,7 @@
 import cv2
 import time
 import torch
-
+import numpy as np
 
 
 class TrackingMosse:
@@ -45,9 +45,15 @@ class TrackingMosse:
 			# FPS'i hesapla ve göster
 			self.show_fps(frame)
 			
+			# Dinamik FPS ayarı
+			if self.inside:
+				wait_time = int(1000 / np.random.uniform(25, 30))  # FPS aralığında rastgele bir değer
+			else:
+				wait_time = int(1000 / np.random.uniform(25, 30))  # FPS aralığında rastgele bir değer
+			
 			cv2.imshow('YOLOv5 ve MOSSE', frame)
 			
-			key = cv2.waitKey(int(1000 / self.fps)) & 0xFF  # Dinamik FPS ayarı
+			key = cv2.waitKey(wait_time) & 0xFF
 			if key == ord('q'):
 				break
 			elif key == ord('r'):
@@ -139,17 +145,14 @@ class TrackingMosse:
 				self.top_left_y <= center_y <= self.bottom_right_y):
 			cv2.putText(frame, "INSIDE", (self.top_left_x + 10, self.top_left_y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1,
 						(0, 255, 0), 2)
-			self.fps = 15  # İHA içerideyse FPS'i 15'e düşür
+			# FPS ayarını 25 ile 30 arasında rastgele bir değere ayarla
 			self.inside = True
 		else:
 			cv2.putText(frame, "OUTSIDE", (self.top_left_x + 10, self.top_left_y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1,
 						(0, 0, 255), 2)
 			self.show_arrow(frame, center_x, center_y)
-			self.fps = 30  # İHA dışarıdaysa FPS'i 30'a çıkar
+			# FPS ayarını 25 ile 30 arasında rastgele bir değere ayarla
 			self.inside = False
-			
-			# MOSSE karesini yeniden İHA üzerine odaklamak için YOLO tespiti çalıştır
-			self.run_yolo(frame)
 	
 	def show_arrow(self, frame, center_x, center_y):
 		# MOSSE karesi YOLO karesinin tamamen dışındaysa bir ok işareti göster
@@ -176,15 +179,16 @@ class TrackingMosse:
 			self.prev_time = current_time
 		
 		cv2.putText(frame, f'FPS: {int(self.fps_display)}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-		
-		def reset_tracking(self, frame):
-			# Mevcut MOSSE izleyiciyi sıfırla
-			self.mosse_tracker = None
-			self.tracking_active = False
-			
-			# YOLO tespitini yeniden çalıştırarak İHA'ya yeniden odaklan
-			self.run_yolo(frame)
-		
-		# Takip sistemi sınıfını başlat
 	
+	def reset_tracking(self, frame):
+		# Mevcut MOSSE izleyiciyi sıfırla
+		self.mosse_tracker = None
+		self.tracking_active = False
+		
+		# YOLO tespitini yeniden çalıştırarak İHA'ya yeniden odaklan
+		self.run_yolo(frame)
+
+
+# Takip sistemi sınıfını başlat
 tracking_system = TrackingMosse()
+
